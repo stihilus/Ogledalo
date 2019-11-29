@@ -1,0 +1,365 @@
+<html>
+
+<head>
+    <title>Ogledalo</title>
+
+    <script src="javascripts/p5.js"></script>
+    <script src="javascripts/p5.dom.min.js"></script>
+    <script src="javascripts/p5.sound.min.js"></script>
+
+    <style>
+        html {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            position: fixed;
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            display: flex;
+            background-color: #E9E7E3;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #canvas-wrapper {
+            height: 480px;
+            width: 480px;
+            background-color: white;
+            position: relative;
+        }
+
+        #canvas-wrapper img {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        #paint {
+            display: flex;
+            height: 100%;
+            /*width: 50%;*/
+            justify-content: center;
+            align-items: center;
+            margin-right: 50px;
+        }
+
+        .tools-wrapper {
+            display: flex;
+            flex-direction: column;
+            margin-right: 10px;
+        }
+
+        .tools,
+        .colors {
+            width: 90px;
+            font-size: 0;
+            margin-bottom: 20px;
+        }
+
+        .colors button {
+            display: inline-block;
+            width: 34px;
+            height: 34px;
+            font-size: 0;
+            margin: 0 0 5px 5px;
+            border: 2px solid #E9E7E3;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .tools button {
+            display: inline-block;
+            width: 34px;
+            height: 34px;
+            margin: 0 0 5px 5px;
+            border: 2px solid #E9E7E3;
+            outline: none;
+            background-color: transparent;
+            background-size: 26px;
+            background-repeat: no-repeat;
+            background-position: 50%;
+            font-size: 0;
+            cursor: pointer;
+        }
+
+        .colors button.active,
+        .tools button.active {
+            border-color: #555
+        }
+
+        .tool#line { background-image: url('images/line.svg'); }
+        .tool#oval { background-image: url('images/oval.svg'); }
+        .tool#rect { background-image: url('images/rect.svg'); }
+        .tool#triangle { background-image: url('images/triangle.svg'); }
+        .tool#fill { background-image: url('images/fill.svg'); }
+
+        video {
+            display: none;
+        }
+
+        input[type=range] {
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin: 0px 0;
+            border-radius: 10px;
+            width: 80px;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 20px;
+            cursor: pointer;
+            box-shadow: 1px 1px 1px rgba(0, 0, 0, 0), 0px 0px 1px rgba(13, 13, 13, 0);
+            background: #ffffff;
+            border-radius: 10px;
+            border: 0px solid rgba(255, 255, 255, 0.31);
+        }
+        input[type=range]::-webkit-slider-thumb {
+            box-shadow: 1px 1px 1px rgba(0, 0, 0, 0), 0px 0px 1px rgba(13, 13, 13, 0);
+            border: 0px solid rgba(0, 0, 0, 0);
+            height: 20px;
+            width: 20px;
+            border-radius: 10px;
+            background: #b7b5b1;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: 0px;
+        }
+        input[type=range]:focus::-webkit-slider-runnable-track {
+            background: #ffffff;
+        }
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 20px;
+            cursor: pointer;
+            box-shadow: 1px 1px 1px rgba(0, 0, 0, 0), 0px 0px 1px rgba(13, 13, 13, 0);
+            background: #ffffff;
+            border-radius: 10px;
+            border: 0px solid rgba(255, 255, 255, 0.31);
+        }
+        input[type=range]::-moz-range-thumb {
+            box-shadow: 1px 1px 1px rgba(0, 0, 0, 0), 0px 0px 1px rgba(13, 13, 13, 0);
+            border: 0px solid rgba(0, 0, 0, 0);
+            height: 20px;
+            width: 20px;
+            border-radius: 10px;
+            background: #b7b5b1;
+            cursor: pointer;
+        }
+        input[type=range]::-ms-track {
+            width: 100%;
+            height: 20px;
+            cursor: pointer;
+            background: transparent;
+            border-color: transparent;
+            color: transparent;
+        }
+        input[type=range]::-ms-fill-lower {
+            background: #808080;
+            border: 0px solid rgba(255, 255, 255, 0.31);
+            border-radius: 0.2px;
+            box-shadow: 1px 1px 1px rgba(0, 0, 0, 0), 0px 0px 1px rgba(13, 13, 13, 0);
+        }
+        input[type=range]::-ms-fill-upper {
+            background: #ffffff;
+            border: 0px solid rgba(255, 255, 255, 0.31);
+            border-radius: 0.2px;
+            box-shadow: 1px 1px 1px rgba(0, 0, 0, 0), 0px 0px 1px rgba(13, 13, 13, 0);
+        }
+        input[type=range]::-ms-thumb {
+            box-shadow: 1px 1px 1px rgba(0, 0, 0, 0), 0px 0px 1px rgba(13, 13, 13, 0);
+            border: 0px solid rgba(0, 0, 0, 0);
+            width: 20px;
+            border-radius: 10px;
+            background: #b7b5b1;
+            cursor: pointer;
+            height: 20px;
+        }
+        input[type=range]:focus::-ms-fill-lower {
+            background: #ffffff;
+        }
+        input[type=range]:focus::-ms-fill-upper {
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+<div id="paint">
+    <div class="tools-wrapper">
+    <div class="tools">
+        <button id="line" class="tool active" onclick="changeTool('line')">line</button>
+        <button id="oval" class="tool" onclick="changeTool('oval')">oval</button>
+        <button id="rect" class="tool" onclick="changeTool('rect')">rect</button>
+        <button id="triangle" class="tool" onclick="changeTool('triangle')">triangle</button>
+        <button id="fill" class="tool" onclick="changeTool('fill')">fill</button>
+    </div>
+    <div class="colors">
+        <button id="cE95958" class="color active" style="background: #E95958" onclick="changeColor('E95958')"></button>
+        <button id="c412700" class="color" style="background: #412700" onclick="changeColor('412700')"></button>
+        <button id="cF39B4F" class="color" style="background: #F39B4F" onclick="changeColor('F39B4F')"></button>
+        <button id="c7C5720" class="color" style="background: #7C5720" onclick="changeColor('7C5720')"></button>
+        <button id="cF2C94C" class="color" style="background: #F2C94C" onclick="changeColor('F2C94C')"></button>
+        <button id="cBB8418" class="color" style="background: #BB8418" onclick="changeColor('BB8418')"></button>
+        <button id="c27AE60" class="color" style="background: #27AE60" onclick="changeColor('27AE60')"></button>
+        <button id="cD8D8D8" class="color" style="background: #D8D8D8" onclick="changeColor('D8D8D8')"></button>
+        <button id="c2D9CDB" class="color" style="background: #2D9CDB" onclick="changeColor('2D9CDB')"></button>
+        <button id="cBABABA" class="color" style="background: #BABABA" onclick="changeColor('BABABA')"></button>
+        <button id="cBB6BD9" class="color" style="background: #BB6BD9" onclick="changeColor('BB6BD9')"></button>
+        <button id="c727272" class="color" style="background: #727272" onclick="changeColor('727272')"></button>
+        <button id="cFFFFFF" class="color" style="background: #FFFFFF" onclick="changeColor('FFFFFF')"></button>
+        <button id="c000000" class="color" style="background: #000000" onclick="changeColor('000000')"></button>
+    </div>
+    <input type="range" min="3" max="15" step="1" value="5" onchange="state.width = event.target.value" />
+    </div>
+    <div id="canvas-wrapper">
+        <img src="images/grid.png" alt="">
+        <canvas id="myCanvas" height="480" width="480"></canvas>
+    </div>
+</div>
+<script>
+  var state = {
+    color: '#E95958',
+    width: 5,
+    tool: 'line',
+  };
+  var mouse = { x: 0, y: 0 };
+
+  function changeTool(tool) {
+    document.querySelector('.tool.active').classList.remove('active');
+    document.querySelector('.tool#' + tool).classList.add('active');
+    state.tool = tool;
+  }
+  function changeColor(color) {
+    document.querySelector('.color.active').classList.remove('active');
+    document.querySelector('.color#c' + color).classList.add('active');
+    state.color = '#' + color;
+  }
+
+  var drawingCanvas = document.getElementById('myCanvas');
+  var ctx = drawingCanvas.getContext('2d');
+
+  drawingCanvas.addEventListener('touchmove', function (e) {
+    mouse.x = e.touches[0].clientX - this.parentElement.offsetLeft;
+    mouse.y = e.touches[0].clientY - this.parentElement.offsetTop;
+  }, false);
+
+  drawingCanvas.addEventListener('mousemove', function (e) {
+    mouse.x = e.clientX - this.parentElement.offsetLeft;
+    mouse.y = e.clientY - this.parentElement.offsetTop;
+  }, false);
+
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  var onPaint = function () {
+    if (state.tool === 'line') {
+      ctx.lineTo(mouse.x, mouse.y);
+      ctx.stroke();
+    }
+  };
+  function onTouchStart() {
+    ctx.lineWidth = state.width;
+    ctx.strokeStyle = state.color;
+    ctx.fillStyle = state.color;
+    ctx.moveTo(mouse.x, mouse.y);
+    ctx.beginPath();
+    drawingCanvas.addEventListener('touchmove', onPaint, false);
+    drawingCanvas.addEventListener('mousemove', onPaint, false);
+    if (state.tool === 'rect') {
+      const size = state.width * 4;
+      ctx.fillRect(mouse.x - size, mouse.y - size,  2 * size, 2 * size);
+    }
+    else if (state.tool === 'oval') {
+      const size = state.width * 4;
+      ctx.arc(mouse.x, mouse.y, size, 0, 2 * Math.PI, false);
+      ctx.fill();
+    }
+    else if (state.tool === 'triangle') {
+      const size = state.width * 4;
+      ctx.beginPath();
+      ctx.moveTo(mouse.x, mouse.y - 0.86 * size);
+      ctx.lineTo(mouse.x + size, mouse.y + 0.86 * size);
+      ctx.lineTo(mouse.x - size, mouse.y + 0.86 * size);
+      ctx.closePath();
+      ctx.fill();
+    }
+    else if (state.tool === 'fill') {
+      const startX = Math.floor(mouse.x / 120) * 120;
+      const startY = Math.floor(mouse.y / 120) * 120;
+      ctx.fillRect(startX, startY,  120, 120);
+    }
+  }
+  drawingCanvas.addEventListener('touchstart', onTouchStart, false);
+  drawingCanvas.addEventListener('mousedown', onTouchStart, false);
+
+  function onTouchend () {
+    drawingCanvas.removeEventListener('touchmove', onPaint, false);
+    drawingCanvas.removeEventListener('mousemove', onPaint, false);
+    var image = drawingCanvas.toDataURL();
+    state.drawing = loadImage(image);
+  }
+  drawingCanvas.addEventListener('touchend', onTouchend, false);
+  drawingCanvas.addEventListener('mouseup', onTouchend, false);
+
+  drawingCanvas.addEventListener('mouseenter', function (e) {
+    mouse.x = e.clientX - this.parentElement.offsetLeft;
+    mouse.y = e.clientY - this.parentElement.offsetTop;
+    ctx.moveTo(mouse.x, mouse.y);
+  }, false);
+
+
+
+  var video;
+  var vScale = 8;
+
+  function setup() {
+    createCanvas(640, 480);
+    pixelDensity(3);
+    //frameRate(10);
+    video = createCapture(VIDEO);
+    video.size(width / vScale, height / vScale);
+    frameRate(30);
+  }
+
+  function draw() {
+    background(255);
+    if (!state.drawing) return;
+    video.loadPixels();
+    for (var y = 0; y < video.height; y++) {
+      for (var x = 0; x < video.width; x++) {
+        var index = (video.width - x - 1 + (y * video.width)) * 4;
+        var r = video.pixels[index + 0];
+        var g = video.pixels[index + 1];
+        var b = video.pixels[index + 2];
+        var bright = (r + g + b) / 3;
+        if (isNaN(bright)) bright = 0;
+        var w = Math.floor(map(bright, 0, 255, 15, 0));
+        noStroke();
+        fill(255);
+        rectMode(CENTER);
+
+        // select image from images array
+        var assets_array = [
+          [0, 0], [0, 120], [0, 240], [0, 360],
+          [120, 0], [120, 120], [120, 240], [120, 360],
+          [240, 0], [240, 120], [240, 240], [240, 360],
+          [360, 0], [360, 120], [360, 240], [360, 360],
+        ];
+        var asset = assets_array[w];
+        var size = w * 2;
+        image(state.drawing, x * vScale, y * vScale, vScale, vScale, asset[0], asset[1], 120, 120);
+      }
+    }
+  }
+</script>
+</body>
+</html>
